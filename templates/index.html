@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        UMTS/WCDMA - Simulateur de Handover
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+    <script
+        src="https://cdn.plot.ly/plotly-2.35.2.min.js">
+    </script>
+
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+    <div>
+
+        <div class="eyebrow">
+            ENSA TETOUAN · GSTR
+        </div>
+
+        <h1>
+            UMTS/WCDMA —
+            Simulateur de Handover
+        </h1>
+
+        <p>
+            Analyse du RSCP, Ec/No,
+            Soft/Hard Handover,
+            Active Set, coupures et ping-pong.
+        </p>
+
+    </div>
+
+
+    <div
+        id="status"
+        class="status idle"
+    >
+        ● En attente
+    </div>
+
+</header>
+
+
+<main class="layout">
+
+
+    <!-- =====================================================
+         PARAMETRES
+    ====================================================== -->
+
+    <aside class="parameters-panel">
+
+
+        <h2>
+            Paramètres
+        </h2>
+
+
+        <p class="subtitle">
+            Entrez les paramètres puis
+            lancez la simulation.
+        </p>
+
+
+        <form id="simulationForm">
+
+
+            <!-- CONFIGURATION -->
+
+            <div class="form-section">
+
+                <h3>
+                    Configuration
+                </h3>
+
+                <label>
+
+                    Nom de la configuration
+
+                    <input
+                        id="scenarioName"
+                        type="text"
+                        placeholder="Ex. Test ping-pong"
+                    >
+
+                </label>
+
+            </div>
+
+
+            <!-- GEOMETRIE -->
+
+            <div class="form-section">
+
+                <h3>
+                    Géométrie et mobilité
+                </h3>
+
+
+                <label>
+
+                    Distance entre Node B (m)
+
+                    <input
+                        id="nodeDistance"
+                        type="text"
+                        inputmode="decimal"
+                        value="2000"
+                        required
+                    >
+
+                </label>
+
+
+                <label>
+
+                    Position du mobile à analyser (m)
+
+                    <input
+                        id="mobileStart"
+                        type="text"
+                        inputmode="decimal"
+                        value="1000"
+                        required
+                    >
+
+                </label>
+
+
+                <label>
+
+                    Vitesse du mobile (km/h)
+
+                    <input
+                        id="speed"
+                        type="text"
+                        inputmode="decimal"
+                        value="90"
+                        required
+                    >
+
+                </label>
+
+
+                <div class="info-box">
+
+                    La simulation complète représente
+                    le déplacement de l’UE du
+
+                    <strong>
+                        Node B A
+                    </strong>
+
+                    vers le
+
+                    <strong>
+                        Node B B
+                    </strong>.
+
+                    <br><br>
+
+                    La position saisie sert uniquement à afficher
+                    le RSCP, l’Ec/No, la cellule servante
+                    et l’Active Set
+
+                    <strong>
+                        à cet endroit précis.
+                    </strong>
+
+                    <br><br>
+
+                    Le temps est calculé avec :
+
+                    <strong>
+                        t = distance / vitesse
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- RADIO -->
+
+            <div class="form-section">
+
+                <h3>
+                    Paramètres radio
+                </h3>
+
+
+                <label>
+
+                    Puissance d’émission Node B (dBm)
+
+                    <input
+                        id="txPower"
+                        type="text"
+                        value="43"
+                        required
+                    >
+
+                </label>
+
+
+                <label>
+
+                    Modèle de propagation
+
+                    <select
+                        id="propagationModel"
+                        required
+                    >
+
+                        <option value="">
+                            -- Choisir --
+                        </option>
+
+                        <option
+                            value="log_distance"
+                            selected
+                        >
+                            Log-Distance + shadowing
+                        </option>
+
+                        <option value="free_space">
+                            Espace libre (FSPL)
+                        </option>
+
+                    </select>
+
+                </label>
+
+            </div>
+
+
+            <!-- DECISION -->
+
+            <div class="form-section">
+
+                <h3>
+                    Décision de handover
+                </h3>
+
+
+                <div class="two-columns">
+
+
+                    <label>
+
+                        Seuil d’ajout Ec/No (dB)
+
+                        <input
+                            id="addThreshold"
+                            type="text"
+                            value="-15"
+                            required
+                        >
+
+                    </label>
+
+
+                    <label>
+
+                        Seuil de suppression Ec/No (dB)
+
+                        <input
+                            id="dropThreshold"
+                            type="text"
+                            value="-18"
+                            required
+                        >
+
+                    </label>
+
+
+                </div>
+
+
+                <label>
+
+                    Hystérésis (dB)
+
+                    <input
+                        id="hysteresis"
+                        type="text"
+                        value="1"
+                        required
+                    >
+
+                </label>
+
+            </div>
+
+
+            <!-- PARAMETRES AVANCES -->
+
+            <details class="advanced">
+
+                <summary>
+                    ⚙ Paramètres avancés
+                </summary>
+
+
+                <div class="advanced-content">
+
+
+                    <div class="two-columns">
+
+
+                        <label>
+
+                            Fréquence (MHz)
+
+                            <input
+                                id="frequency"
+                                type="text"
+                                value="2100"
+                            >
+
+                        </label>
+
+
+                        <label>
+
+                            CPICH (%)
+
+                            <input
+                                id="cpich"
+                                type="text"
+                                value="10"
+                            >
+
+                        </label>
+
+
+                        <label>
+
+                            Exposant n
+
+                            <input
+                                id="exponent"
+                                type="text"
+                                value="3.5"
+                            >
+
+                        </label>
+
+
+                        <label>
+
+                            Shadowing σ (dB)
+
+                            <input
+                                id="shadowing"
+                                type="text"
+                                value="0"
+                            >
+
+                        </label>
+
+
+                        <label>
+
+                            Décorrélation (m)
+
+                            <input
+                                id="decorrelation"
+                                type="text"
+                                value="50"
+                            >
+
+                        </label>
+
+
+                        <label>
+
+                            Noise Figure (dB)
+
+                            <input
+                                id="noiseFigure"
+                                type="text"
+                                value="5"
+                            >
+
+                        </label>
+
+
+                        <label>
+
+                            Bande WCDMA (MHz)
+
+                            <input
+                                id="bandwidth"
+                                type="text"
+                                value="5"
+                            >
+
+                        </label>
+
+
+                        <label>
+
+                            Time-To-Trigger (s)
+
+                            <input
+                                id="ttt"
+                                type="text"
+                                value="0.5"
+                            >
+
+                        </label>
+
+
+                        <label>
+
+                            Nombre de points
+
+                            <input
+                                id="numberPoints"
+                                type="text"
+                                value="1000"
+                            >
+
+                        </label>
+
+
+                        <label>
+
+                            Fenêtre ping-pong (s)
+
+                            <input
+                                id="pingpongWindow"
+                                type="text"
+                                value="5"
+                            >
+
+                        </label>
+
+
+                        <label>
+
+                            Seed aléatoire
+
+                            <input
+                                id="seed"
+                                type="text"
+                                value="7"
+                            >
+
+                        </label>
+
+
+                    </div>
+
+                </div>
+
+            </details>
+
+
+            <!-- BOUTONS -->
+
+            <div class="buttons">
+
+                <button
+                    type="submit"
+                    class="primary"
+                >
+                    ▶ Lancer la simulation
+                </button>
+
+
+                <button
+                    type="button"
+                    id="saveScenario"
+                    class="secondary"
+                >
+                    💾 Enregistrer configuration
+                </button>
+
+            </div>
+
+
+        </form>
+
+
+        <!-- CONFIGURATIONS -->
+
+        <section class="saved-section">
+
+            <div class="saved-title">
+
+                <h3>
+                    Configurations enregistrées
+                </h3>
+
+                <span id="savedCount">
+                    0
+                </span>
+
+            </div>
+
+
+            <div id="savedScenarios">
+
+                <p class="empty">
+                    Aucune configuration enregistrée.
+                </p>
+
+            </div>
+
+
+            <button
+                id="compareButton"
+                type="button"
+                class="compare-button"
+                disabled
+            >
+                Comparer les configurations
+            </button>
+
+        </section>
+
+
+    </aside>
+
+
+    <!-- =====================================================
+         RESULTATS
+    ====================================================== -->
+
+    <section class="workspace">
+
+
+        <div
+            id="emptyState"
+            class="empty-state"
+        >
+
+            <div class="empty-icon">
+                📡
+            </div>
+
+            <h2>
+                Aucune simulation lancée
+            </h2>
+
+            <p>
+
+                Choisissez vos paramètres,
+                une position du mobile à analyser,
+                puis lancez la simulation.
+
+            </p>
+
+        </div>
+
+
+        <div
+            id="results"
+            class="results hidden"
+        >
+
+
+            <!-- TRAJET -->
+
+            <section class="trajectory-card">
+
+
+                <div class="node">
+
+                    <span>
+                        A
+                    </span>
+
+                    <small>
+                        Node B A
+                    </small>
+
+                </div>
+
+
+                <div class="track">
+
+                    <div id="softZonesTrack">
+                    </div>
+
+                    <div
+                        id="ueMarker"
+                        class="ue-marker"
+                    >
+                        UE
+                    </div>
+
+                </div>
+
+
+                <div class="node">
+
+                    <span>
+                        B
+                    </span>
+
+                    <small>
+                        Node B B
+                    </small>
+
+                </div>
+
+
+            </section>
+
+
+            <!-- INFO TRAJET -->
+
+            <section class="journey-info">
+
+
+                <div>
+
+                    <span>
+                        Position analysée
+                    </span>
+
+                    <strong id="analysisPosition">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Temps pour atteindre cette position
+                    </span>
+
+                    <strong id="analysisTime">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Temps total A → B
+                    </span>
+
+                    <strong id="journeyTime">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Temps total en Soft HO
+                    </span>
+
+                    <strong id="softTime">
+                        -
+                    </strong>
+
+                </div>
+
+
+            </section>
+
+
+            <!-- CARTES RESULTATS -->
+
+            <section class="result-grid">
+
+
+                <article class="metric">
+
+                    <h4>
+                        RSCP
+                    </h4>
+
+                    <div
+                        id="resultRscp"
+                        class="metric-value small-value"
+                    >
+                        -
+                    </div>
+
+                    <p id="rscpPositionText">
+                        À la position analysée
+                    </p>
+
+                </article>
+
+
+                <article class="metric">
+
+                    <h4>
+                        Ec/No
+                    </h4>
+
+                    <div
+                        id="resultEcno"
+                        class="metric-value small-value"
+                    >
+                        -
+                    </div>
+
+                    <p id="ecnoPositionText">
+                        À la position analysée
+                    </p>
+
+                </article>
+
+
+                <article class="metric highlight">
+
+                    <h4>
+                        Cellule servante
+                    </h4>
+
+                    <div
+                        id="resultServing"
+                        class="metric-value"
+                    >
+                        -
+                    </div>
+
+                    <p>
+                        À la position analysée
+                    </p>
+
+                </article>
+
+
+                <article class="metric">
+
+                    <h4>
+                        Active Set
+                    </h4>
+
+                    <div
+                        id="resultActive"
+                        class="metric-value"
+                    >
+                        -
+                    </div>
+
+                    <p>
+                        À la position analysée
+                    </p>
+
+                </article>
+
+
+                <article class="metric metric-soft">
+
+                    <h4>
+                        Zone(s) Soft Handover
+                    </h4>
+
+                    <div
+                        id="resultSoftZone"
+                        class="metric-value medium-value"
+                    >
+                        -
+                    </div>
+
+                    <p>
+                        Longueur totale sur le trajet
+                    </p>
+
+                </article>
+
+
+                <article class="metric">
+
+                    <h4>
+                        Handovers totaux
+                    </h4>
+
+                    <div
+                        id="resultHandover"
+                        class="metric-value"
+                    >
+                        0
+                    </div>
+
+                    <p>
+                        Changements de cellule servante
+                    </p>
+
+                </article>
+
+
+                <article class="metric metric-soft">
+
+                    <h4>
+                        Soft handovers
+                    </h4>
+
+                    <div
+                        id="resultSoftHandover"
+                        class="metric-value"
+                    >
+                        0
+                    </div>
+
+                    <p>
+                        Changements pendant {A,B}
+                    </p>
+
+                </article>
+
+
+                <article class="metric metric-hard">
+
+                    <h4>
+                        Hard handovers
+                    </h4>
+
+                    <div
+                        id="resultHardHandover"
+                        class="metric-value"
+                    >
+                        0
+                    </div>
+
+                    <p>
+                        Changements directs A ↔ B
+                    </p>
+
+                </article>
+
+
+                <article class="metric metric-drop">
+
+                    <h4>
+                        Coupures / Drop
+                    </h4>
+
+                    <div
+                        id="resultDrop"
+                        class="metric-value medium-value"
+                    >
+                        -
+                    </div>
+
+                    <p>
+                        Perte de service
+                    </p>
+
+                </article>
+
+
+                <article class="metric">
+
+                    <h4>
+                        Handover ping-pong
+                    </h4>
+
+                    <div
+                        id="resultPingpong"
+                        class="metric-value medium-value"
+                    >
+                        -
+                    </div>
+
+                    <p>
+                        Retours rapides A ↔ B
+                    </p>
+
+                </article>
+
+
+            </section>
+
+
+            <!-- HANDOVER DETAILS -->
+
+            <section
+                id="handoverDetails"
+                class="event-panel hidden"
+            >
+
+                <h3>
+                    Événements de handover
+                </h3>
+
+                <div id="handoverEventsList">
+                </div>
+
+            </section>
+
+
+            <!-- PING-PONG DETAILS -->
+
+            <section
+                id="pingpongDetails"
+                class="event-panel hidden"
+            >
+
+                <h3>
+                    Positions des handovers ping-pong
+                </h3>
+
+                <div class="info-box">
+
+                    Un ping-pong correspond à un changement
+                    rapide de cellule suivi d'un retour vers
+                    la cellule précédente dans la fenêtre
+                    temporelle configurée.
+
+                </div>
+
+                <div id="pingpongEventsList">
+                </div>
+
+            </section>
+
+
+            <!-- DROP DETAILS -->
+
+            <section
+                id="dropDetails"
+                class="event-panel hidden"
+            >
+
+                <h3>
+                    Zones / instants de coupure
+                </h3>
+
+                <div id="dropZonesList">
+                </div>
+
+            </section>
+
+
+            <!-- GRAPHIQUES -->
+
+            <section class="charts-grid">
+
+
+                <article class="chart-card">
+
+                    <h3>
+                        RSCP = f(distance)
+                    </h3>
+
+                    <div
+                        id="rscpChart"
+                        class="chart"
+                    >
+                    </div>
+
+                </article>
+
+
+                <article class="chart-card">
+
+                    <h3>
+                        Ec/No = f(distance)
+                    </h3>
+
+                    <div
+                        id="ecnoChart"
+                        class="chart"
+                    >
+                    </div>
+
+                </article>
+
+
+                <article class="chart-card">
+
+                    <h3>
+                        Évolution de la cellule servante
+                    </h3>
+
+                    <div
+                        id="servingChart"
+                        class="chart"
+                    >
+                    </div>
+
+                </article>
+
+
+                <article class="chart-card">
+
+                    <h3>
+                        Évolution de l’Active Set
+                    </h3>
+
+                    <div
+                        id="activeChart"
+                        class="chart"
+                    >
+                    </div>
+
+                </article>
+
+
+            </section>
+
+
+        </div>
+
+
+        <!-- COMPARAISON -->
+
+        <section
+            id="comparisonSection"
+            class="comparison hidden"
+        >
+
+
+            <div class="comparison-header">
+
+                <h2>
+                    Comparaison des configurations
+                </h2>
+
+                <button
+                    id="closeComparison"
+                    type="button"
+                    class="small-button"
+                >
+                    Fermer
+                </button>
+
+            </div>
+
+
+            <div class="table-wrapper">
+
+
+                <table>
+
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Configuration
+                            </th>
+
+                            <th>
+                                Position UE
+                            </th>
+
+                            <th>
+                                Vitesse
+                            </th>
+
+                            <th>
+                                Hyst.
+                            </th>
+
+                            <th>
+                                Cellule
+                            </th>
+
+                            <th>
+                                Active Set
+                            </th>
+
+                            <th>
+                                Zone Soft HO
+                            </th>
+
+                            <th>
+                                Temps Soft HO
+                            </th>
+
+                            <th>
+                                HO totaux
+                            </th>
+
+                            <th>
+                                Soft HO
+                            </th>
+
+                            <th>
+                                Hard HO
+                            </th>
+
+                            <th>
+                                Coupures
+                            </th>
+
+                            <th>
+                                Durée coupure
+                            </th>
+
+                            <th>
+                                Ping-pong
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="comparisonBody">
+                    </tbody>
+
+
+                </table>
+
+
+            </div>
+
+
+        </section>
+
+
+    </section>
+
+
+</main>
+
+
+<script
+    src="{{ url_for('static', filename='js/app.js') }}">
+</script>
+
+
+</body>
+
+</html>
