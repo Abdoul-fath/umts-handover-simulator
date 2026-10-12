@@ -148,6 +148,8 @@ This project was developed as part of an engineering academic project focused on
 ## Author
 
 **Abdoul-Fatah Omar Hassan**
+**Nachda Nourouddine**
+**Yameogo Ariel Barthelemy Wendtoin**
 
 Engineering student — Telecommunications and Networks Systems
 
